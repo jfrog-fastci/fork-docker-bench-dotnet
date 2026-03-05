@@ -1,13 +1,16 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0
-
-RUN apt-get update && apt-get install -y vim less man-db wget telnet curl net-tools iputils-ping htop dnsutils strace
-
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /app
 
-COPY . .
+COPY *.csproj ./
+RUN dotnet restore
 
+COPY . .
 RUN dotnet publish -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+WORKDIR /app
+COPY --from=build /app/publish .
 
 EXPOSE 8080
 
-CMD ["dotnet", "/app/publish/app.dll"]
+CMD ["dotnet", "app.dll"]
